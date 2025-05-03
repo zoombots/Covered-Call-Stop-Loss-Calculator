@@ -36,14 +36,17 @@ if st.button("Calculate"):
         stop_loss_max = entry_price * (1 - max_loss_pct)
         stop_loss_price = max(stop_loss_atr, stop_loss_max)
 
+        # Calculate % drawdown of stop-loss from entry
+        stop_loss_drawdown_pct = ((stop_loss_price - entry_price) / entry_price) * 100  # should be negative
+
         # 🟢 Weekly Max Drawdown Calculation
         hist = hist.reset_index()  # so 'Date' is a column
-        hist['Week'] = hist['Date'].dt.to_period('W')  # assign week label
+        hist['Week'] = hist['Date'].dt.to_period('W')
         
         weekly_drawdowns = []
         
         for week, group in hist.groupby('Week'):
-            high = group['Close'].cummax()  # running peak within week
+            high = group['Close'].cummax()
             drawdown = (group['Close'] - high) / high
             min_drawdown = drawdown.min()
             weekly_drawdowns.append(min_drawdown)
@@ -53,7 +56,9 @@ if st.button("Calculate"):
         st.subheader("Results")
         st.write(f"Entry Price: ${entry_price:.2f}")
         st.write(f"ATR (14-day) over last {weeks_of_history} weeks: {atr:.2f}")
-        st.write(f"Recommended Stop-Loss Price: ${stop_loss_price:.2f}")
+
+        # ✅ Updated display:
+        st.write(f"Recommended Stop-Loss Price: ${stop_loss_price:.2f} ({stop_loss_drawdown_pct:.2f}%)")
         st.write(f"Max Weekly Drawdown over last {weeks_of_history} weeks: {max_weekly_drawdown_pct:.2f}%")
 
         # Optional: plot price + weekly drawdown marker
