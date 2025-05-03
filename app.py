@@ -2,22 +2,22 @@ import yfinance as yf
 import pandas as pd
 import numpy as np
 import streamlit as st
+import matplotlib.pyplot as plt
 
-st.title("Covered Call Stop-Loss Calculator")
+st.title("Covered Call Stop-Loss Calculator with Weekly Max Drawdown")
 
 # Inputs
 symbol = st.text_input("Enter Stock Symbol:", "TSLA")
 max_loss_pct = st.slider("Max % Loss Allowed:", 5, 20, 10) / 100
 atr_multiplier = st.slider("ATR Multiplier:", 1, 3, 2)
-weeks_of_history = st.slider("Number of Weeks for ATR Calculation:", 4, 52, 12)  # NEW SLIDER
+weeks_of_history = st.slider("Number of Weeks for ATR Calculation:", 4, 52, 12)
 
 if st.button("Calculate"):
-    # Calculate date range
     days_of_history = weeks_of_history * 5  # ~5 trading days per week
     
     stock = yf.Ticker(symbol)
     hist = stock.history(period=f"{days_of_history}d")
-    
+
     if len(hist) < 14:
         st.error(f"Not enough historical data ({len(hist)} days retrieved). Try increasing weeks or using a different stock.")
     else:
@@ -36,7 +36,36 @@ if st.button("Calculate"):
         stop_loss_max = entry_price * (1 - max_loss_pct)
         stop_loss_price = max(stop_loss_atr, stop_loss_max)
 
+        # 🟢 Weekly Max Drawdown Calculation
+        hist = hist.reset_index()  # so 'Date' is a column
+        hist['Week'] = hist['Date'].dt.to_period('W')  # assign week label
+        
+        weekly_drawdowns = []
+        
+        for week, group in hist.groupby('Week'):
+            high = group['Close'].cummax()  # running peak within week
+            drawdown = (group['Close'] - high) / high
+            min_drawdown = drawdown.min()
+            weekly_drawdowns.append(min_drawdown)
+        
+        max_weekly_drawdown_pct = min(weekly_drawdowns) * 100  # negative %
+
         st.subheader("Results")
         st.write(f"Entry Price: ${entry_price:.2f}")
         st.write(f"ATR (14-day) over last {weeks_of_history} weeks: {atr:.2f}")
         st.write(f"Recommended Stop-Loss Price: ${stop_loss_price:.2f}")
+        st.write(f"Max Weekly Drawdown over last {weeks_of_history} weeks: {max_weekly_drawdown_pct:.2f}%")
+
+        # Optional: plot price + weekly drawdown marker
+        fig, ax = plt.subplots(figsize=(10,4))
+        ax.plot(hist['Date'], hist['Close'], label='Close Price')
+        ax.set_ylabel('Price')
+        ax.set_title('Price Chart with Weekly Max Drawdown')
+        
+        for week, group in hist.groupby('Week'):
+            week_max = group['Close'].max()
+            week_min = group['Close'].min()
+            ax.vlines(group['Date'].iloc[0], week_min, week_max, color='red', alpha=0.2)
+        
+        ax.legend()
+        st.pyplot(fig)
