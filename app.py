@@ -61,16 +61,29 @@ if st.button("Calculate"):
         st.write(f"Recommended Stop-Loss Price: ${stop_loss_price:.2f} ({stop_loss_drawdown_pct:.2f}%)")
         st.write(f"Max Weekly Drawdown over last {weeks_of_history} weeks: {max_weekly_drawdown_pct:.2f}%")
 
-        # Optional: plot price + weekly drawdown marker
-        fig, ax = plt.subplots(figsize=(10,4))
-        ax.plot(hist['Date'], hist['Close'], label='Close Price')
-        ax.set_ylabel('Price')
-        ax.set_title('Price Chart with Weekly Max Drawdown')
-        
-        for week, group in hist.groupby('Week'):
-            week_max = group['Close'].max()
-            week_min = group['Close'].min()
-            ax.vlines(group['Date'].iloc[0], week_min, week_max, color='red', alpha=0.2)
-        
-        ax.legend()
-        st.pyplot(fig)
+ # Optional: plot price + weekly drawdown marker with color-coded stop-loss trigger
+fig, ax = plt.subplots(figsize=(10,4))
+ax.plot(hist['Date'], hist['Close'], label='Close Price')
+ax.set_ylabel('Price')
+ax.set_title('Price Chart with Weekly Max Drawdown and Stop-Loss Trigger')
+
+for week, group in hist.groupby('Week'):
+    week_max = group['Close'].max()
+    week_min = group['Close'].min()
+
+    # Color code: red if stop-loss would have triggered
+    if week_min < stop_loss_price:
+        color = 'red'
+        linewidth = 2.5  # make it thicker for emphasis
+    else:
+        color = 'green'
+        linewidth = 1.5
+
+    ax.vlines(group['Date'].iloc[0], week_min, week_max, color=color, alpha=0.8, linewidth=linewidth)
+
+# Add horizontal line for stop-loss
+ax.axhline(stop_loss_price, color='purple', linestyle='--', label='Stop-Loss Price')
+
+ax.legend()
+st.pyplot(fig)
+
