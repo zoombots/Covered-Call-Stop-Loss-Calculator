@@ -65,7 +65,8 @@ if st.button("Calculate"):
 
  # Optional: plot price + weekly drawdown marker with color-coded stop-loss trigger
 fig, ax = plt.subplots(figsize=(10,4))
-ax.plot(hist['Date'], hist['Close'], label='Close Price')
+date_col = hist.columns[0]  # get first column name
+ax.plot(hist[date_col], hist['Close'], label='Close Price')
 ax.set_ylabel('Price')
 ax.set_title('Price Chart with Weekly Max Drawdown and Stop-Loss Trigger')
 
