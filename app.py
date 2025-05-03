@@ -40,8 +40,19 @@ if st.button("Calculate"):
         stop_loss_drawdown_pct = ((stop_loss_price - entry_price) / entry_price) * 100  # should be negative
 
         # 🟢 Weekly Max Drawdown Calculation
-        hist = hist.reset_index()
-        hist.rename(columns={hist.columns[0]: 'Date'}, inplace=True)  # ensure 'Date' column
+# Reset index to move datetime index into column
+hist = hist.reset_index()
+
+# ✅ Ensure first column is named 'Date' no matter what
+first_col_name = hist.columns[0]
+if first_col_name != 'Date':
+    hist.rename(columns={first_col_name: 'Date'}, inplace=True)
+
+# ✅ Now plotting
+date_col = 'Date'  # guaranteed to exist
+ax.plot(hist[date_col], hist['Close'], label='Close Price')
+
+
 
         hist['Week'] = hist['Date'].dt.to_period('W')
         
