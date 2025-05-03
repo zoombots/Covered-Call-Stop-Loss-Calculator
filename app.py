@@ -40,7 +40,9 @@ if st.button("Calculate"):
         stop_loss_drawdown_pct = ((stop_loss_price - entry_price) / entry_price) * 100  # should be negative
 
         # 🟢 Weekly Max Drawdown Calculation
-        hist = hist.reset_index()  # so 'Date' is a column
+        hist = hist.reset_index()
+        hist.rename(columns={hist.columns[0]: 'Date'}, inplace=True)  # ensure 'Date' column
+
         hist['Week'] = hist['Date'].dt.to_period('W')
         
         weekly_drawdowns = []
