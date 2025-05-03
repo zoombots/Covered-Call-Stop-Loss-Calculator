@@ -40,19 +40,12 @@ if st.button("Calculate"):
         stop_loss_drawdown_pct = ((stop_loss_price - entry_price) / entry_price) * 100  # should be negative
 
         # 🟢 Weekly Max Drawdown Calculation
-# Reset index to move datetime index into column
-hist = hist.reset_index()
+        hist = hist.reset_index()
 
-# ✅ Ensure first column is named 'Date' no matter what
-first_col_name = hist.columns[0]
-if first_col_name != 'Date':
-    hist.rename(columns={first_col_name: 'Date'}, inplace=True)
-
-# ✅ Now plotting
-date_col = 'Date'  # guaranteed to exist
-ax.plot(hist[date_col], hist['Close'], label='Close Price')
-
-
+        # ✅ Ensure first column is named 'Date' no matter what
+        first_col_name = hist.columns[0]
+        if first_col_name != 'Date':
+            hist.rename(columns={first_col_name: 'Date'}, inplace=True)
 
         hist['Week'] = hist['Date'].dt.to_period('W')
         
@@ -74,36 +67,35 @@ ax.plot(hist[date_col], hist['Close'], label='Close Price')
         st.write(f"Recommended Stop-Loss Price: ${stop_loss_price:.2f} ({stop_loss_drawdown_pct:.2f}%)")
         st.write(f"Max Weekly Drawdown over last {weeks_of_history} weeks: {max_weekly_drawdown_pct:.2f}%")
 
-        # ✅ ✅ ✅ PLOT CODE INDENTED INSIDE HERE
-fig, ax = plt.subplots(figsize=(10,4))
-ax.plot(hist['Date'], hist['Close'], label='Close Price')
-ax.set_ylabel('Price')
-ax.set_title('Price Chart with Weekly Max Drawdown and Stop-Loss Trigger')
+        # ✅ ✅ ✅ PLOT CODE MOVED INSIDE here
+        fig, ax = plt.subplots(figsize=(10,4))
+        ax.plot(hist['Date'], hist['Close'], label='Close Price')
+        ax.set_ylabel('Price')
+        ax.set_title('Price Chart with Weekly Max Drawdown and Stop-Loss Trigger')
 
-# highlight weeks based on SELECTED stop-loss price
-for week, group in hist.groupby('Week'):
-    week_max = group['Close'].max()
-    week_min = group['Close'].min()
+        # highlight weeks based on SELECTED stop-loss price
+        for week, group in hist.groupby('Week'):
+            week_max = group['Close'].max()
+            week_min = group['Close'].min()
 
-    # Color code: RED if the stop-loss would have been triggered in this week
-    if week_min < stop_loss_price:
-        color = 'red'
-        linewidth = 2.5
-        label = 'Stop-Loss Triggered'
-    else:
-        color = 'green'
-        linewidth = 1.5
-        label = 'Stop-Loss Held'
+            # Color code: RED if the stop-loss would have been triggered in this week
+            if week_min < stop_loss_price:
+                color = 'red'
+                linewidth = 2.5
+                label = 'Stop-Loss Triggered'
+            else:
+                color = 'green'
+                linewidth = 1.5
+                label = 'Stop-Loss Held'
 
-    # Plot only first instance of label to avoid duplicate legend entries
-    if ax.get_legend_handles_labels()[1].count(label) == 0:
-        ax.vlines(group['Date'].iloc[0], week_min, week_max, color=color, alpha=0.8, linewidth=linewidth, label=label)
-    else:
-        ax.vlines(group['Date'].iloc[0], week_min, week_max, color=color, alpha=0.8, linewidth=linewidth)
+            # Plot only first instance of label to avoid duplicate legend entries
+            if ax.get_legend_handles_labels()[1].count(label) == 0:
+                ax.vlines(group['Date'].iloc[0], week_min, week_max, color=color, alpha=0.8, linewidth=linewidth, label=label)
+            else:
+                ax.vlines(group['Date'].iloc[0], week_min, week_max, color=color, alpha=0.8, linewidth=linewidth)
 
-# Add horizontal stop-loss line
-ax.axhline(stop_loss_price, color='purple', linestyle='--', label='Stop-Loss Price')
+        # Add horizontal stop-loss line
+        ax.axhline(stop_loss_price, color='purple', linestyle='--', label='Stop-Loss Price')
 
-ax.legend()
-st.pyplot(fig)
-
+        ax.legend()
+        st.pyplot(fig)
