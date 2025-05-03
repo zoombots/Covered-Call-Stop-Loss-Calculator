@@ -66,7 +66,6 @@ if st.button("Calculate"):
         # ✅ ✅ ✅ PLOT CODE INDENTED INSIDE HERE
         fig, ax = plt.subplots(figsize=(10,4))
         date_col = hist.columns[0]  # get first column name
-        st.write("Columns:", hist.columns)
 
         ax.plot(hist[date_col], hist['Close'], label='Close Price')
         ax.set_ylabel('Price')
