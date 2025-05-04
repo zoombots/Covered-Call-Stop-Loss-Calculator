@@ -59,7 +59,33 @@ if st.button("Calculate"):
         
         max_weekly_drawdown_pct = min(weekly_drawdowns) * 100  # negative %
 
+        # ✅ NEW BLOCK: add slider and calculate cumulative return
+        strike_pct = st.slider("1-Week Forward Strike Price (% above Monday price):", 0.0, 5.0, 2.0) / 100
 
+        weekly_returns = []
+
+        for week, group in hist.groupby('Week'):
+            if len(group) < 2:
+                continue  # skip incomplete weeks
+
+            monday_price = group.iloc[0]['Open']  # Monday open
+            friday_price = group.iloc[-1]['Close']  # Friday close
+            strike_price = monday_price * (1 + strike_pct)
+
+            actual_sell_price = min(friday_price, strike_price)
+
+            weekly_return = (actual_sell_price - monday_price) / monday_price
+            weekly_returns.append(weekly_return)
+
+        if weekly_returns:
+            cumulative_return = np.prod([1 + r for r in weekly_returns]) - 1
+        else:
+            cumulative_return = 0
+
+        # ✅ Display cumulative return
+        st.write(f"Cumulative Return over {len(weekly_returns)} weeks (buy Monday open, sell Friday close or strike cap at {strike_pct*100:.2f}%): {cumulative_return*100:.2f}%")
+
+        # ✅ RESULTS
         st.subheader("Results")
         st.write(f"Entry Price: ${entry_price:.2f}")
         st.write(f"ATR (14-day) over last {weeks_of_history} weeks: {atr:.2f}")
@@ -77,23 +103,4 @@ if st.button("Calculate"):
             week_min = group['Close'].min()
 
             # ✅ Check if stop-loss breached any day in the week
-            stop_loss_triggered = (group['Close'] < stop_loss_price).any()
-
-            if stop_loss_triggered:
-                color = 'red'
-                linewidth = 2.5
-                label = 'Stop-Loss Triggered (any day)'
-            else:
-                color = 'green'
-                linewidth = 1.5
-                label = 'Stop-Loss Held (all week)'
-
-            if ax.get_legend_handles_labels()[1].count(label) == 0:
-                ax.vlines(group['Date'].iloc[0], week_min, week_max, color=color, alpha=0.8, linewidth=linewidth, label=label)
-            else:
-                ax.vlines(group['Date'].iloc[0], week_min, week_max, color=color, alpha=0.8, linewidth=linewidth)
-
-        ax.axhline(stop_loss_price, color='purple', linestyle='--', label='Stop-Loss Price')
-
-        ax.legend()
-        st.pyplot(fig)
+            stop_loss_triggered =
