@@ -103,4 +103,23 @@ if st.button("Calculate"):
             week_min = group['Close'].min()
 
             # ✅ Check if stop-loss breached any day in the week
-            stop_loss_triggered =
+            stop_loss_triggered = (group['Close'] < stop_loss_price).any()
+
+            if stop_loss_triggered:
+                color = 'red'
+                linewidth = 2.5
+                label = 'Stop-Loss Triggered (any day)'
+            else:
+                color = 'green'
+                linewidth = 1.5
+                label = 'Stop-Loss Held (all week)'
+
+            if ax.get_legend_handles_labels()[1].count(label) == 0:
+                ax.vlines(group['Date'].iloc[0], week_min, week_max, color=color, alpha=0.8, linewidth=linewidth, label=label)
+            else:
+                ax.vlines(group['Date'].iloc[0], week_min, week_max, color=color, alpha=0.8, linewidth=linewidth)
+
+        ax.axhline(stop_loss_price, color='purple', linestyle='--', label='Stop-Loss Price')
+
+        ax.legend()
+        st.pyplot(fig)
