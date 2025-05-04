@@ -12,8 +12,8 @@ max_loss_pct = st.slider("Max % Loss Allowed:", 5, 20, 10) / 100
 atr_multiplier = st.slider("ATR Multiplier:", 1, 3, 2)
 weeks_of_history = st.slider("Number of Weeks for ATR Calculation:", 4, 52, 12)
 
-if st.button("Calculate"):    
-days_of_history = weeks_of_history * 5  # ~5 trading days per week
+    if st.button("Calculate"):    
+    days_of_history = weeks_of_history * 5  # ~5 trading days per week
     
     stock = yf.Ticker(symbol)
     hist = stock.history(period=f"{days_of_history}d")
