@@ -12,6 +12,7 @@ symbol = st.text_input("Enter Stock Symbol:", "TSLA")
 max_loss_pct = st.slider("Max % Loss Allowed:", 5, 20, 10) / 100
 atr_multiplier = st.slider("ATR Multiplier:", 1, 3, 2)
 weeks_of_history = st.slider("Number of Weeks for ATR Calculation:", 4, 52, 12)
+strike_pct = st.slider("1-Week Forward Strike Price (% above Monday price):", 0.0, 5.0, 2.0) / 100
 
 days_of_history = weeks_of_history * 5  # ~5 trading days per week
 
@@ -55,35 +56,44 @@ else:
 
     max_weekly_drawdown_pct = min(weekly_drawdowns) * 100
 
-    # ✅ Retrieve option bid price for nearest expiry >= 5 days
+    # ✅ Retrieve options chain and find strike closest to desired % above entry price
     expirations = stock.options
     today = datetime.datetime.now().date()
-
     valid_expirations = [exp for exp in expirations if (pd.to_datetime(exp).date() - today).days >= 5]
+
     if not valid_expirations:
         st.error("No expiration dates at least 5 days out available!")
+        bid_price = 0
+        strike_price_opt = None
     else:
         chosen_exp = valid_expirations[0]
         opt_chain = stock.option_chain(chosen_exp)
         calls = opt_chain.calls
 
-        calls['strike_diff'] = abs(calls['strike'] - entry_price)
+        target_strike_price = entry_price * (1 + strike_pct)
+
+        # Find strike closest to target strike
+        calls['strike_diff'] = abs(calls['strike'] - target_strike_price)
         closest_call = calls.sort_values('strike_diff').iloc[0]
 
-        bid_price = closest_call['bid']
         strike_price_opt = closest_call['strike']
+        bid_price = closest_call['bid']
 
-        total_premium = bid_price * weeks_of_history
-        annualized_return = (total_premium / entry_price) * (52 / weeks_of_history) * 100
+    # Total premium & annualized return
+    total_premium = bid_price * weeks_of_history
+    annualized_return = (total_premium / entry_price) * (52 / weeks_of_history) * 100 if entry_price != 0 else 0
 
-    # ✅ Weekly returns (still uses input strike cap for now → optional to swap with option strike)
+    # ✅ Weekly returns (use actual retrieved option strike as cap)
     weekly_returns = []
     for week, group in hist.groupby('Week'):
         if len(group) < 2:
             continue
         monday_price = group.iloc[0]['Open']
         friday_price = group.iloc[-1]['Close']
-        strike_price_week = monday_price * (1 + (strike_price_opt - monday_price) / monday_price) if valid_expirations else monday_price
+
+        # Use retrieved option strike as cap
+        strike_price_week = strike_price_opt if strike_price_opt is not None else monday_price * (1 + strike_pct)
+
         actual_sell_price = min(friday_price, strike_price_week)
         weekly_return = (actual_sell_price - monday_price) / monday_price
         weekly_returns.append(weekly_return)
@@ -97,14 +107,17 @@ else:
     st.write(f"Recommended Stop-Loss Price (initial): ${stop_loss_price:.2f} ({stop_loss_drawdown_pct:.2f}%)")
     st.write(f"Max Weekly Drawdown over last {weeks_of_history} weeks: {max_weekly_drawdown_pct:.2f}%")
 
-    if valid_expirations:
+    if strike_price_opt is not None:
         st.write(f"Closest Call Option Expiration: {chosen_exp}")
-        st.write(f"Closest Call Option Strike: ${strike_price_opt:.2f}")
+        st.write(f"Target Strike Price (slider): {target_strike_price:.2f}")
+        st.write(f"Closest Available Call Option Strike: {strike_price_opt:.2f}")
         st.write(f"Option Bid Price: ${bid_price:.2f}")
         st.write(f"Projected Total Premium over {weeks_of_history} weeks: ${total_premium:.2f}")
         st.write(f"Annualized Return from Premium: {annualized_return:.2f}%")
+    else:
+        st.write("No valid call option found for target strike.")
 
-    st.write(f"Cumulative Return over {len(weekly_returns)} weeks (buy Monday open, sell Friday close or strike cap at {strike_price_opt if valid_expirations else 'N/A'}): {cumulative_return*100:.2f}%")
+    st.write(f"Cumulative Return over {len(weekly_returns)} weeks (buy Monday open, sell Friday close or strike cap at ${strike_price_opt:.2f}): {cumulative_return*100:.2f}%")
 
     # ✅ Plot
     fig, ax = plt.subplots(figsize=(10,4))
