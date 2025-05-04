@@ -146,14 +146,25 @@ else:
         st.write("No valid call option found for target strike.")
 
     st.write(f"Cumulative Return over {len(weekly_returns)} weeks (stop-loss exit, capped at {strike_pct*100:.2f}%): {cumulative_return*100:.2f}%")
-
+    
     final_capital_pct = capital * 100
     final_capital_value = capital * entry_price
     combined_capital_value = final_capital_value + total_premium
-
+    
     st.write(f"Final Capital: {final_capital_pct:.2f}% of starting capital")
     st.write(f"Final Capital (dollar equivalent): ${final_capital_value:.2f}")
     st.write(f"Combined Final Capital (incl. total premium): ${combined_capital_value:.2f}")
+    
+    num_weeks = len(weekly_returns)
+    years = num_weeks / 52 if num_weeks > 0 else 1
+    
+    if combined_capital_value > 0 and entry_price > 0 and years > 0:
+        annualized_combined_return = (combined_capital_value / entry_price) ** (1 / years) - 1
+    else:
+        annualized_combined_return = 0
+    
+    st.write(f"Annualized Return (incl. premium): {annualized_combined_return * 100:.2f}%")
+
 
 
     st.dataframe(pd.DataFrame(weekly_returns))
