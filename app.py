@@ -20,7 +20,10 @@ stock = yf.Ticker(symbol)
 hist = stock.history(period=f"{days_of_history}d")
 
 if len(hist) < 14:
-    st.error(f"Not enough historical data ({len(hist)} days retrieved). Try increasing weeks or using a different stock.")
+    st.error(
+        f"Not enough historical data ({len(hist)} days retrieved). "
+        "Try increasing weeks or using a different stock."
+    )
 else:
     # ATR calculation
     high_low = hist['High'] - hist['Low']
@@ -56,7 +59,7 @@ else:
 
     max_weekly_drawdown_pct = min(weekly_drawdowns) * 100
 
-    # ✅ Retrieve options chain and find strike closest to desired % above entry price
+    # ✅ Retrieve options chain and find closest strike for info only
     expirations = stock.options
     today = datetime.datetime.now().date()
     valid_expirations = [exp for exp in expirations if (pd.to_datetime(exp).date() - today).days >= 5]
@@ -72,50 +75,54 @@ else:
 
         target_strike_price = entry_price * (1 + strike_pct)
 
-        # Find strike closest to target strike
         calls['strike_diff'] = abs(calls['strike'] - target_strike_price)
         closest_call = calls.sort_values('strike_diff').iloc[0]
 
         strike_price_opt = closest_call['strike']
         bid_price = closest_call['bid']
 
-    # Total premium & annualized return
+    # Total premium & annualized return (info only)
     total_premium = bid_price * weeks_of_history
     annualized_return = (total_premium / entry_price) * (52 / weeks_of_history) * 100 if entry_price != 0 else 0
 
-    # ✅ Weekly returns (use actual retrieved option strike as cap)
-    capital = 1  # normalized starting capital = 1
-    weekly_returns = []  # optional → to record each week’s % return
+    # ✅ Weekly returns (always use strike_pct cap, not option strike)
+    capital = 1  # normalized starting capital = $1
+    weekly_returns = []
 
     for week, group in hist.groupby('Week'):
         if len(group) < 2:
             continue
+
         monday_price = group.iloc[0]['Open']
         friday_price = group.iloc[-1]['Close']
 
-        # calculate stop-loss for the week
         weekly_stop_loss_atr = monday_price - (atr_multiplier * atr)
         weekly_stop_loss_max = monday_price * (1 - max_loss_pct)
         weekly_stop_loss = max(weekly_stop_loss_atr, weekly_stop_loss_max)
 
-        # check if stop-loss was hit during week
+        strike_price_week = monday_price * (1 + strike_pct)  # always use % cap
+
         stop_loss_hit = group[group['Close'] <= weekly_stop_loss]
 
         if not stop_loss_hit.empty:
-            exit_day = stop_loss_hit.iloc[0]
             sell_price = weekly_stop_loss
-            exit_reason = f"Stop-loss hit on {exit_day['Date'].date()}"
+            exit_reason = f"Stop-loss hit on {stop_loss_hit.iloc[0]['Date'].date()}"
         else:
-            strike_price_week = strike_price_opt if strike_price_opt is not None else monday_price * (1 + strike_pct)
             sell_price = min(friday_price, strike_price_week)
-            exit_reason = "Held to Friday"
+            exit_reason = "Held to Friday or capped"
 
         weekly_return = (sell_price - monday_price) / monday_price
+        weekly_dollar_return = capital * weekly_return
         capital *= (1 + weekly_return)
+
         weekly_returns.append({
             'week': str(week),
-            'return_pct': weekly_return * 100,
-            'exit_price': sell_price,
+            'monday_price': monday_price,
+            'friday_price': friday_price,
+            'sell_price': sell_price,
+            'weekly_return_pct': weekly_return * 100,
+            'weekly_dollar_return': weekly_dollar_return,
+            'capital_after_week': capital,
             'exit_reason': exit_reason
         })
 
@@ -138,7 +145,8 @@ else:
     else:
         st.write("No valid call option found for target strike.")
 
-    st.write(f"Cumulative Return over {len(weekly_returns)} weeks (buy Monday open, sell Friday close or stop-loss exit, strike cap at ${strike_price_opt:.2f}): {cumulative_return*100:.2f}%")
+    st.write(f"Cumulative Return over {len(weekly_returns)} weeks (stop-loss exit, capped at {strike_pct*100:.2f}%): {cumulative_return*100:.2f}%")
+    st.write(f"Final Capital: ${capital:.2f}")
 
     st.dataframe(pd.DataFrame(weekly_returns))
 
