@@ -59,6 +59,36 @@ if st.button("Calculate"):
         
         max_weekly_drawdown_pct = min(weekly_drawdowns) * 100  # negative %
 
+
+
+        # Add slider for 1-week forward strike price
+strike_pct = st.slider("1-Week Forward Strike Price (% above entry price):", 0.0, 5.0, 2.0) / 100
+
+weekly_returns = []
+
+for week, group in hist.groupby('Week'):
+    if len(group) < 2:
+        continue  # skip incomplete weeks
+
+    monday_price = group.iloc[0]['Open']  # Monday open
+    friday_price = group.iloc[-1]['Close']  # Friday close
+    strike_price = monday_price * (1 + strike_pct)
+
+    actual_sell_price = min(friday_price, strike_price)
+
+    weekly_return = (actual_sell_price - monday_price) / monday_price
+    weekly_returns.append(weekly_return)
+
+# Calculate cumulative compounded return
+if weekly_returns:
+    cumulative_return = np.prod([1 + r for r in weekly_returns]) - 1
+else:
+    cumulative_return = 0
+
+st.write(f"Cumulative Return over {len(weekly_returns)} weeks (buy Monday open, sell Friday close or strike cap at {strike_pct*100:.2f}%): {cumulative_return*100:.2f}%")
+
+
+
         st.subheader("Results")
         st.write(f"Entry Price: ${entry_price:.2f}")
         st.write(f"ATR (14-day) over last {weeks_of_history} weeks: {atr:.2f}")
