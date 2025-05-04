@@ -84,21 +84,42 @@ else:
     annualized_return = (total_premium / entry_price) * (52 / weeks_of_history) * 100 if entry_price != 0 else 0
 
     # ✅ Weekly returns (use actual retrieved option strike as cap)
-    weekly_returns = []
-    for week, group in hist.groupby('Week'):
-        if len(group) < 2:
-            continue
-        monday_price = group.iloc[0]['Open']
-        friday_price = group.iloc[-1]['Close']
+capital = 1  # normalized starting capital = 1
+weekly_returns = []  # optional → to record each week’s % return
 
-        # Use retrieved option strike as cap
+for week, group in hist.groupby('Week'):
+    if len(group) < 2:
+        continue
+    monday_price = group.iloc[0]['Open']
+    friday_price = group.iloc[-1]['Close']
+
+    # calculate stop-loss for the week
+    weekly_stop_loss_atr = monday_price - (atr_multiplier * atr)
+    weekly_stop_loss_max = monday_price * (1 - max_loss_pct)
+    weekly_stop_loss = max(weekly_stop_loss_atr, weekly_stop_loss_max)
+
+    # check if stop-loss was hit during week
+    stop_loss_hit = group[group['Close'] <= weekly_stop_loss]
+
+    if not stop_loss_hit.empty:
+        exit_day = stop_loss_hit.iloc[0]
+        sell_price = weekly_stop_loss
+        exit_reason = f"Stop-loss hit on {exit_day['Date'].date()}"
+    else:
         strike_price_week = strike_price_opt if strike_price_opt is not None else monday_price * (1 + strike_pct)
+        sell_price = min(friday_price, strike_price_week)
+        exit_reason = "Held to Friday"
 
-        actual_sell_price = min(friday_price, strike_price_week)
-        weekly_return = (actual_sell_price - monday_price) / monday_price
-        weekly_returns.append(weekly_return)
+    weekly_return = (sell_price - monday_price) / monday_price
+    capital *= (1 + weekly_return)
+    weekly_returns.append({
+        'week': str(week),
+        'return_pct': weekly_return * 100,
+        'exit_price': sell_price,
+        'exit_reason': exit_reason
+    })
 
-    cumulative_return = np.prod([1 + r for r in weekly_returns]) - 1 if weekly_returns else 0
+cumulative_return = capital - 1
 
     # ✅ Output
     st.subheader("Results")
