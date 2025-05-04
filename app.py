@@ -158,12 +158,19 @@ else:
     num_weeks = len(weekly_returns)
     years = num_weeks / 52 if num_weeks > 0 else 1
     
+    if capital > 0 and years > 0:
+        annualized_stock_return = capital ** (1 / years) - 1
+    else:
+        annualized_stock_return = 0
+    
     if combined_capital_value > 0 and entry_price > 0 and years > 0:
         annualized_combined_return = (combined_capital_value / entry_price) ** (1 / years) - 1
     else:
         annualized_combined_return = 0
     
+    st.write(f"Annualized Return (stock only): {annualized_stock_return * 100:.2f}%")
     st.write(f"Annualized Return (incl. premium): {annualized_combined_return * 100:.2f}%")
+
 
 
 
