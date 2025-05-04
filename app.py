@@ -43,6 +43,7 @@ else:
     if first_col_name != 'Date':
         hist.rename(columns={first_col_name: 'Date'}, inplace=True)
 
+    hist['Date'] = pd.to_datetime(hist['Date'])
     hist['Week'] = hist['Date'].dt.to_period('W')
 
     weekly_drawdowns = []
@@ -76,23 +77,24 @@ else:
     st.write(f"Max Weekly Drawdown over last {weeks_of_history} weeks: {max_weekly_drawdown_pct:.2f}%")
     st.write(f"Cumulative Return over {len(weekly_returns)} weeks (buy Monday open, sell Friday close or strike cap at {strike_pct*100:.2f}%): {cumulative_return*100:.2f}%")
 
-    # ✅ Updated plotting with weekly recalculated stop-loss
+    # ✅ UPDATED plotting with weekly stop-loss recalculated + guards
     fig, ax = plt.subplots(figsize=(10,4))
     ax.plot(hist['Date'], hist['Close'], label='Close Price')
     ax.set_ylabel('Price')
     ax.set_title('Price Chart with Weekly Stop-Loss Trigger Highlight (per-week recalculated)')
 
     for week, group in hist.groupby('Week'):
+        if group.empty or len(group) < 1:
+            continue
+
         week_max = group['Close'].max()
         week_min = group['Close'].min()
 
-        # ✅ Recalculate stop-loss at start of the week (Monday open)
         monday_open = group.iloc[0]['Open']
         weekly_stop_loss_atr = monday_open - (atr_multiplier * atr)
         weekly_stop_loss_max = monday_open * (1 - max_loss_pct)
         weekly_stop_loss = max(weekly_stop_loss_atr, weekly_stop_loss_max)
 
-        # ✅ Check if stop-loss was triggered that week
         stop_loss_triggered = (group['Close'] < weekly_stop_loss).any()
 
         if stop_loss_triggered:
@@ -101,4 +103,19 @@ else:
             label = 'Stop-Loss Triggered (week)'
         else:
             color = 'green'
-            linewidth = 1
+            linewidth = 1.5
+            label = 'Stop-Loss Held (week)'
+
+        if ax.get_legend_handles_labels()[1].count(label) == 0:
+            ax.vlines(group['Date'].iloc[0], week_min, week_max, color=color, alpha=0.8, linewidth=linewidth, label=label)
+        else:
+            ax.vlines(group['Date'].iloc[0], week_min, week_max, color=color, alpha=0.8, linewidth=linewidth)
+
+        if len(group) >= 2:
+            ax.hlines(weekly_stop_loss,
+                      xmin=group['Date'].iloc[0],
+                      xmax=group['Date'].iloc[-1],
+                      color='purple', linestyle='--', alpha=0.5)
+
+    ax.legend()
+    st.pyplot(fig)
