@@ -201,9 +201,19 @@ else:
             linewidth = 2.5
             label = 'Stop-Loss Triggered (week)'
         else:
-            color = 'green'
+            # Determine if week was profitable or not
+            monday_open = group.iloc[0]['Open']
+            friday_close = group.iloc[-1]['Close']
+            weekly_return = friday_close - monday_open
+        
+            if weekly_return >= 0:
+                color = 'green'
+                label = 'Gain Week (no stop-loss)'
+            else:
+                color = 'orange'
+                label = 'Loss Week (no stop-loss)'
             linewidth = 1.5
-            label = 'Stop-Loss Held (week)'
+
 
         if ax.get_legend_handles_labels()[1].count(label) == 0:
             ax.vlines(group['Date'].iloc[0], week_min, week_max, color=color, alpha=0.8, linewidth=linewidth, label=label)
