@@ -194,14 +194,14 @@ else:
     ax.plot(hist['Date'], hist['Close'], label='Close Price')
     ax.set_ylabel('Price')
     ax.set_title('Price Chart with Weekly Stop-Loss Trigger Highlight (per-week recalculated)')
-    
-    for week, group in hist.groupby('Week'):
-        if group.empty or len(group) < 2:
-            continue
 
         # ✅ Initialize counters
         green_weeks = 0
         red_weeks = 0
+
+    for week, group in hist.groupby('Week'):
+        if group.empty or len(group) < 2:
+            continue
         
         week_max = group['Close'].max()
         week_min = group['Close'].min()
