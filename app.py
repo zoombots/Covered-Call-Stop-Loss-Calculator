@@ -75,8 +75,21 @@ else:
 
         target_strike_price = entry_price * (1 + strike_pct)
 
-        calls['strike_diff'] = abs(calls['strike'] - target_strike_price)
-        closest_call = calls.sort_values('strike_diff').iloc[0]
+        # Filter only OTM calls (strikes >= target strike)
+        otm_calls = calls[calls['strike'] >= target_strike_price]
+    
+    if not otm_calls.empty:
+        # Get the closest OTM strike above target
+        closest_call = otm_calls.sort_values('strike').iloc[0]
+        strike_price_opt = closest_call['strike']
+        bid_price = closest_call['bid']
+    else:
+        # Fallback if no OTM strikes found
+        closest_call = calls.sort_values('strike').iloc[-1]
+        strike_price_opt = closest_call['strike']
+        bid_price = closest_call['bid']
+        st.warning("No OTM call found above target. Using highest available strike as fallback.")
+
 
         strike_price_opt = closest_call['strike']
         bid_price = closest_call['bid']
