@@ -151,7 +151,7 @@ else:
     if strike_price_opt is not None:
         st.write(f"Closest Call Option Expiration: {chosen_exp}")
         st.write(f"Target Strike Price (slider): {target_strike_price:.2f}")
-        st.write(f"Closest Available Call Option Strike: {strike_price_opt:.2f}")
+        st.write(f"Closest Available OTM Call Option Strike: {strike_price_opt:.2f}")
         st.write(f"Option Bid Price: ${bid_price:.2f}")
         st.write(f"Projected Total Premium over {weeks_of_history} weeks: ${total_premium:.2f}")
         st.write(f"Annualized Return from Premium: {annualized_return:.2f}%")
