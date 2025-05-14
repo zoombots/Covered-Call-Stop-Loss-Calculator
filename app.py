@@ -177,7 +177,7 @@ else:
     st.dataframe(pd.DataFrame(weekly_returns))
 
     # ✅ Plot
-        fig, ax = plt.subplots(figsize=(10, 4))
+    fig, ax = plt.subplots(figsize=(10, 4))
     ax.plot(hist['Date'], hist['Close'], label='Close Price')
     ax.set_ylabel('Price')
     ax.set_title('Price Chart with Weekly Stop-Loss Trigger Highlight (per-week recalculated)')
