@@ -215,12 +215,13 @@ else:
             color = 'red'
             linewidth = 2.5
             label = 'Stop-Loss Triggered (week)'
-            weekly_return_pct = ((weekly_stop_loss - monday_open) / monday_open) * 100
+            red_weeks += 1
         else:
             weekly_return_pct = ((friday_close - monday_open) / monday_open) * 100
             if weekly_return_pct >= 0:
                 color = 'green'
                 label = 'Gain Week (no stop-loss)'
+                green_weeks += 1
             else:
                 color = 'orange'
                 label = 'Loss Week (no stop-loss)'
@@ -246,6 +247,12 @@ else:
                 )
         except Exception as e:
             st.warning(f"Annotation error on week {week}: {e}")
+        total_tracked = green_weeks + red_weeks
+        if total_tracked > 0:
+            success_ratio = green_weeks / total_tracked
+            ratio_label = f"Green/Red Weeks: {green_weeks}/{red_weeks} ({success_ratio:.0%} success)"
+            ax.text(0.01, 1.02, ratio_label, transform=ax.transAxes, fontsize=10, color='black')
+
     
     ax.legend()
     st.pyplot(fig)
