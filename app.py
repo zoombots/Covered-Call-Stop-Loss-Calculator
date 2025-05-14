@@ -266,8 +266,5 @@ else:
         else:
             ax.legend()
 
-
-    
-    ax.legend()
     st.pyplot(fig)
 
