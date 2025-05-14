@@ -220,6 +220,7 @@ else:
             linewidth = 2.5
             label = 'Stop-Loss Triggered (week)'
             red_weeks += 1
+            weekly_return_pct = ((weekly_stop_loss - monday_open) / monday_open) * 100  # ✅ Define it here
         else:
             weekly_return_pct = ((friday_close - monday_open) / monday_open) * 100
             if weekly_return_pct >= 0:
@@ -230,6 +231,7 @@ else:
                 color = 'orange'
                 label = 'Loss Week (no stop-loss)'
             linewidth = 1.5
+
     
         if ax.get_legend_handles_labels()[1].count(label) == 0:
             ax.vlines(group['Date'].iloc[0], week_min, week_max, color=color, alpha=0.8, linewidth=linewidth, label=label)
