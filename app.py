@@ -229,7 +229,7 @@ else:
                     va='bottom' if weekly_return_pct >= 0 else 'top',
                     fontsize=8, 
                     color=color,
-                    rotation=90
+                    rotation=0
                 )
         except Exception as e:
             st.warning(f"Annotation error on week {week}: {e}")
@@ -237,7 +237,3 @@ else:
     ax.legend()
     st.pyplot(fig)
 
-
-
-    ax.legend()
-    st.pyplot(fig)
