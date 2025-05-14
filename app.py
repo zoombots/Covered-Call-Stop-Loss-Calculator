@@ -251,11 +251,21 @@ else:
                 )
         except Exception as e:
             st.warning(f"Annotation error on week {week}: {e}")
+        from matplotlib.lines import Line2D  # Add this at the top of your file if not already
+        
+        # After the loop, before ax.legend()
         total_tracked = green_weeks + red_weeks
         if total_tracked > 0:
             success_ratio = green_weeks / total_tracked
             ratio_label = f"Green/Red Weeks: {green_weeks}/{red_weeks} ({success_ratio:.0%} success)"
-            ax.text(0.01, 1.02, ratio_label, transform=ax.transAxes, fontsize=10, color='black')
+            dummy_line = Line2D([0], [0], color='white', label=ratio_label)  # Invisible line for legend
+            handles, labels = ax.get_legend_handles_labels()
+            handles.append(dummy_line)
+            labels.append(ratio_label)
+            ax.legend(handles=handles, labels=labels)
+        else:
+            ax.legend()
+
 
     
     ax.legend()
