@@ -195,9 +195,9 @@ else:
     ax.set_ylabel('Price')
     ax.set_title('Price Chart with Weekly Stop-Loss Trigger Highlight (per-week recalculated)')
 
-        # ✅ Initialize counters
-        green_weeks = 0
-        red_weeks = 0
+    # ✅ Initialize counters
+    green_weeks = 0
+    red_weeks = 0
 
     for week, group in hist.groupby('Week'):
         if group.empty or len(group) < 2:
