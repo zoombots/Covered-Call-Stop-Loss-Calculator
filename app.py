@@ -177,63 +177,65 @@ else:
     st.dataframe(pd.DataFrame(weekly_returns))
 
     # ✅ Plot
-    fig, ax = plt.subplots(figsize=(10,4))
+        fig, ax = plt.subplots(figsize=(10, 4))
     ax.plot(hist['Date'], hist['Close'], label='Close Price')
     ax.set_ylabel('Price')
     ax.set_title('Price Chart with Weekly Stop-Loss Trigger Highlight (per-week recalculated)')
-
+    
+    for week, group in hist.groupby('Week'):
         if group.empty or len(group) < 2:
-        continue
-
-    week_max = group['Close'].max()
-    week_min = group['Close'].min()
-
-    monday_open = group.iloc[0]['Open']
-    friday_close = group.iloc[-1]['Close']
-
-    weekly_stop_loss_atr = monday_open - (atr_multiplier * atr)
-    weekly_stop_loss_max = monday_open * (1 - max_loss_pct)
-    weekly_stop_loss = max(weekly_stop_loss_atr, weekly_stop_loss_max)
-
-    stop_loss_triggered = (group['Close'] < weekly_stop_loss).any()
-
-    if stop_loss_triggered:
-        color = 'red'
-        linewidth = 2.5
-        label = 'Stop-Loss Triggered (week)'
-        weekly_return_pct = ((weekly_stop_loss - monday_open) / monday_open) * 100
-    else:
-        weekly_return_pct = ((friday_close - monday_open) / monday_open) * 100
-        if weekly_return_pct >= 0:
-            color = 'green'
-            label = 'Gain Week (no stop-loss)'
+            continue
+    
+        week_max = group['Close'].max()
+        week_min = group['Close'].min()
+    
+        monday_open = group.iloc[0]['Open']
+        friday_close = group.iloc[-1]['Close']
+    
+        weekly_stop_loss_atr = monday_open - (atr_multiplier * atr)
+        weekly_stop_loss_max = monday_open * (1 - max_loss_pct)
+        weekly_stop_loss = max(weekly_stop_loss_atr, weekly_stop_loss_max)
+    
+        stop_loss_triggered = (group['Close'] < weekly_stop_loss).any()
+    
+        if stop_loss_triggered:
+            color = 'red'
+            linewidth = 2.5
+            label = 'Stop-Loss Triggered (week)'
+            weekly_return_pct = ((weekly_stop_loss - monday_open) / monday_open) * 100
         else:
-            color = 'orange'
-            label = 'Loss Week (no stop-loss)'
-        linewidth = 1.5
-
-    # Vertical line
-    if ax.get_legend_handles_labels()[1].count(label) == 0:
-        ax.vlines(group['Date'].iloc[0], week_min, week_max, color=color, alpha=0.8, linewidth=linewidth, label=label)
-    else:
-        ax.vlines(group['Date'].iloc[0], week_min, week_max, color=color, alpha=0.8, linewidth=linewidth)
-
-    # Annotation for weekly return %
-    # Compute safe y-position for label
-    try:
-        label_pos = week_max * 1.01 if weekly_return_pct >= 0 else week_min * 0.99
-        if pd.notna(label_pos) and np.isfinite(label_pos):
-            ax.annotate(
-                f"{weekly_return_pct:+.1f}%",  # Always show sign
-                xy=(group['Date'].iloc[0], label_pos),
-                ha='center',
-                va='bottom' if weekly_return_pct >= 0 else 'top',
-                fontsize=8,
-                color=color,
-                rotation=90
-            )
-    except Exception as e:
-        st.warning(f"Annotation error on week {week}: {e}")
+            weekly_return_pct = ((friday_close - monday_open) / monday_open) * 100
+            if weekly_return_pct >= 0:
+                color = 'green'
+                label = 'Gain Week (no stop-loss)'
+            else:
+                color = 'orange'
+                label = 'Loss Week (no stop-loss)'
+            linewidth = 1.5
+    
+        if ax.get_legend_handles_labels()[1].count(label) == 0:
+            ax.vlines(group['Date'].iloc[0], week_min, week_max, color=color, alpha=0.8, linewidth=linewidth, label=label)
+        else:
+            ax.vlines(group['Date'].iloc[0], week_min, week_max, color=color, alpha=0.8, linewidth=linewidth)
+    
+        # Weekly return annotation
+        try:
+            label_pos = week_max * 1.01 if weekly_return_pct >= 0 else week_min * 0.99
+            if pd.notna(label_pos) and np.isfinite(label_pos):
+                ax.annotate(
+                    f"{weekly_return_pct:+.1f}%", 
+                    xy=(group['Date'].iloc[0], label_pos),
+                    ha='center', 
+                    va='bottom' if weekly_return_pct >= 0 else 'top',
+                    fontsize=8, 
+                    color=color,
+                    rotation=90
+                )
+        except Exception as e:
+            st.warning(f"Annotation error on week {week}: {e}")
+    
+    ax.legend()
+    st.pyplot(fig)
 
 
 
