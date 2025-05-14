@@ -198,7 +198,11 @@ else:
     for week, group in hist.groupby('Week'):
         if group.empty or len(group) < 2:
             continue
-    
+
+        # ✅ Initialize counters
+        green_weeks = 0
+        red_weeks = 0
+        
         week_max = group['Close'].max()
         week_min = group['Close'].min()
     
