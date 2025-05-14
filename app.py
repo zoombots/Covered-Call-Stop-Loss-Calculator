@@ -219,11 +219,22 @@ else:
         ax.vlines(group['Date'].iloc[0], week_min, week_max, color=color, alpha=0.8, linewidth=linewidth)
 
     # Annotation for weekly return %
-    label_pos = week_max * 1.01 if weekly_return_pct >= 0 else week_min * 0.99
-    ax.annotate(f"{weekly_return_pct:.1f}%", 
+    # Compute safe y-position for label
+    try:
+        label_pos = week_max * 1.01 if weekly_return_pct >= 0 else week_min * 0.99
+        if pd.notna(label_pos) and np.isfinite(label_pos):
+            ax.annotate(
+                f"{weekly_return_pct:+.1f}%",  # Always show sign
                 xy=(group['Date'].iloc[0], label_pos),
-                ha='center', va='bottom' if weekly_return_pct >= 0 else 'top',
-                fontsize=8, color=color, rotation=90)
+                ha='center',
+                va='bottom' if weekly_return_pct >= 0 else 'top',
+                fontsize=8,
+                color=color,
+                rotation=90
+            )
+    except Exception as e:
+        st.warning(f"Annotation error on week {week}: {e}")
+
 
 
     ax.legend()
