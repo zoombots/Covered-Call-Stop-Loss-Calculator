@@ -9,7 +9,7 @@ st.title("Covered Call Analysis | Risk & Reward Calculator")
 st.markdown("""
 ### 📘 Covered Call Risk & Reward Calculator – User Guide
 
-This tool simulates the **risk-return profile of a weekly covered call strategy**, including dynamic stop-losses, capped gains through call strikes, and real-world premium income. Data is sourced from Yahoo! Finance's publicly available APIs
+This tool simulates the **risk-return profile of a weekly covered call strategy**, including dynamic stop-losses, capped gains through call strikes, and real-world premium income. Data is sourced from Yahoo! Finance's publicly available APIs.
 
 ---
 
