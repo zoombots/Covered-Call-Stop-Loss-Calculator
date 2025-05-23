@@ -7,6 +7,7 @@ import datetime
 
 st.title("Covered Call Analysis")
 st.subheader("Risk & Reward Calculator")
+
 st.text("How to use calculator:")
 
 # Inputs
