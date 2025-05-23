@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import datetime
 
 st.title("Covered Call Analysis")
-st.subheader("Risk & Reward Calculator")
+st.title("Risk & Reward Calculator")
 st.text("How to use calculator:")
 
 # Inputs
