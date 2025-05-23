@@ -8,7 +8,7 @@ import datetime
 st.title("Covered Call Analysis | Risk & Reward Calculator")
 st.markdown("""
 ### 📘 Covered Call Risk & Reward Calculator – User Guide
-
+---
 This tool simulates the **risk-return profile of a weekly covered call strategy**, including dynamic stop-losses, capped gains through call strikes, and real-world premium income. Data is sourced from Yahoo! Finance's publicly available APIs. Historical options data calculations are based on the most recent options data available and should not be considered as a reliable backtesting tool. Many variables can affect the stock options' Implied Volatility, such as upcoming earnings, mergers and wider market volatility and as such, please keep in mind that current options premiums may not reflect historical or future values.   
 ---
 
