@@ -5,7 +5,8 @@ import streamlit as st
 import matplotlib.pyplot as plt
 import datetime
 
-st.title("Covered Call:\nRisk & Reward Calculator")
+st.title("Covered Call")
+st.subheader("Risk & Reward Calculator")
 
 # Inputs
 symbol = st.text_input("Enter Stock Symbol:", "TSLA")
