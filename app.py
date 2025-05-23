@@ -5,7 +5,7 @@ import streamlit as st
 import matplotlib.pyplot as plt
 import datetime
 
-st.title("Covered Call Stop-Loss Calculator with Weekly Max Drawdown")
+st.title("Covered Call Risk & Reward Calculator")
 
 # Inputs
 symbol = st.text_input("Enter Stock Symbol:", "TSLA")
