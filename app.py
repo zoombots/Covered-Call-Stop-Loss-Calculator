@@ -5,8 +5,7 @@ import streamlit as st
 import matplotlib.pyplot as plt
 import datetime
 
-st.title("Covered Call Analysis")
-st.subheader("Risk & Reward Calculator")
+st.title("Covered Call Analysis | Risk & Reward Calculator")
 st.markdown("""
 ### 📘 Covered Call Risk & Reward Calculator – User Guide
 
