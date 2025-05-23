@@ -7,8 +7,51 @@ import datetime
 
 st.title("Covered Call Analysis")
 st.subheader("Risk & Reward Calculator")
-print()
-st.text("How to use calculator:")
+st.markdown("""
+### 📘 Covered Call Risk & Reward Calculator – User Guide
+
+This tool simulates the **risk-return profile of a weekly covered call strategy**, including dynamic stop-losses, capped gains through call strikes, and real-world premium income.
+
+---
+
+#### 🧭 How to Use the Tool
+
+1. **Enter a stock symbol** (e.g., `TSLA`)
+2. Adjust the following settings:
+   - **Max % Loss Allowed** – sets a floor to limit weekly losses.
+   - **ATR Multiplier** – adjusts stop-loss based on recent volatility.
+   - **Weeks of History** – defines how much historical data is analyzed.
+   - **1-Week Forward Strike Price (% above Monday)** – caps upside using covered calls.
+
+---
+
+#### 🧠 What It Does
+
+- Dynamically calculates weekly **stop-loss levels**.
+- Simulates **buy on Monday, sell on Friday (or earlier)** trades.
+- Caps upside gains using the **closest out-of-the-money (OTM) call option**.
+- Pulls **real options chain data** and multiplies the premium by selected weeks.
+- Tracks **weekly returns, cumulative gains**, and **premium income**.
+- Displays:
+  - Final and annualized returns (with and without premiums).
+  - Weekly trade log with gain/loss annotations.
+  - A chart with color-coded weekly outcomes and stop-loss triggers.
+
+---
+
+#### 📊 Chart Key
+
+- 🟩 **Green** = Week closed with gain, no stop-loss
+- 🟧 **Orange** = Loss week, no stop-loss triggered
+- 🟥 **Red** = Stop-loss was triggered during the week  
+- 🧠 **Legend includes a success ratio:** Green/Red weeks
+
+---
+
+This is a practical tool to evaluate **income-focused strategies** and optimize covered call entries with downside protection.
+
+""")
+
 
 # Inputs
 symbol = st.text_input("Enter Stock Symbol:", "TSLA")
